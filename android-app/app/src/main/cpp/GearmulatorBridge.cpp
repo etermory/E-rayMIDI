@@ -24,6 +24,7 @@
 #include <android/bitmap.h>
 
 #include "AAudioRecover.h"
+#include "PcAudio.h"
 
 #include <thread>
 #include <atomic>
@@ -162,7 +163,7 @@ static void clearLcd() {
 // 부르던 이전 버전이 버벅임의 원인이었을 가능성이 높다 — 노트가 몰릴 때
 // 렌더링이 콜백의 엄격한 데드라인을 넘기면 끊김+노이즈가 남는다.
 static aaudio_data_callback_result_t audioCallback(
-        AAudioStream*, void*, void* audioData, int32_t numFrames)
+        AAudioStream* stream, void*, void* audioData, int32_t numFrames)
 {
     auto* out = static_cast<int16_t*>(audioData);
     for (int i = 0; i < numFrames; ++i) {
@@ -171,6 +172,8 @@ static aaudio_data_callback_result_t audioCallback(
         out[i * 2 + 0] = f.l;
         out[i * 2 + 1] = f.r;
     }
+    eray::forwardPcAudio(static_cast<int16_t*>(audioData), numFrames,
+                         AAudioStream_getSampleRate(stream));
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 

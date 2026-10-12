@@ -15,6 +15,7 @@
 #include <android/log.h>
 #include <aaudio/AAudio.h>
 #include "AAudioRecover.h"
+#include "PcAudio.h"
 #include <fluidsynth.h>
 
 #include <mutex>
@@ -197,7 +198,7 @@ static void renderLoop() {
 // AAudio 데이터 콜백: 링버퍼에서 pop만 한다.
 // ---------------------------------------------------------------------------
 static aaudio_data_callback_result_t audioCallback(
-        AAudioStream*, void*, void* audioData, int32_t numFrames)
+        AAudioStream* stream, void*, void* audioData, int32_t numFrames)
 {
     auto* out = static_cast<int16_t*>(audioData);
     if (!s_initialized.load(std::memory_order_relaxed)) {
@@ -210,6 +211,8 @@ static aaudio_data_callback_result_t audioCallback(
         out[i * 2 + 0] = f.l;
         out[i * 2 + 1] = f.r;
     }
+    eray::forwardPcAudio(static_cast<int16_t*>(audioData), numFrames,
+                         AAudioStream_getSampleRate(stream));
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 

@@ -25,6 +25,7 @@
 #include <android/log.h>
 #include <aaudio/AAudio.h>
 #include "AAudioRecover.h"
+#include "PcAudio.h"
 #include <cstring>
 #include <cstdint>
 #include <mutex>
@@ -202,7 +203,7 @@ static void stopSynthThread() {
 
 // ── AAudio 콜백: 이제 링버퍼에서 꺼내기만 한다 (O(1), synth 렌더링 비용과 무관) ──
 static aaudio_data_callback_result_t aaCallback(
-        AAudioStream*, void*, void* audioData, int32_t numFrames) {
+        AAudioStream* stream, void*, void* audioData, int32_t numFrames) {
     auto* buf = static_cast<int16_t*>(audioData);
     for (int32_t i = 0; i < numFrames; ++i) {
         StereoS16 f{};
@@ -210,6 +211,8 @@ static aaudio_data_callback_result_t aaCallback(
         buf[i*2 + 0] = f.l;
         buf[i*2 + 1] = f.r;
     }
+    eray::forwardPcAudio(static_cast<int16_t*>(audioData), numFrames,
+                         AAudioStream_getSampleRate(stream));
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 

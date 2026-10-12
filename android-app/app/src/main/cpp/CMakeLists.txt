@@ -316,3 +316,10 @@ target_link_libraries(vlcd-jni
     ${log-lib}
     ${jnigraphics-lib}
 )
+
+# One shared transport instance across all five engine libraries.
+add_library(pc-audio SHARED PcAudio.cpp)
+target_compile_options(pc-audio PRIVATE -O2)
+foreach(engine nuked-sc55-jni munt-jni soundfont-jni gearmulator-jni mu2000-jni)
+    target_link_libraries(${engine} pc-audio)
+endforeach()

@@ -12,6 +12,7 @@
 #include <android/log.h>
 #include <aaudio/AAudio.h>
 #include "AAudioRecover.h"
+#include "PcAudio.h"
 
 #include <thread>
 #include <atomic>
@@ -360,7 +361,7 @@ static void sampleCallback(void* /*ud*/, const AudioFrame<int32_t>& frame) {
 // AAudio data callback  (audio thread)
 // ---------------------------------------------------------------------------
 static aaudio_data_callback_result_t audioCallback(
-        AAudioStream*, void*, void* audioData, int32_t numFrames)
+        AAudioStream* stream, void*, void* audioData, int32_t numFrames)
 {
     // NOTE: SCHED_FIFO was removed here - it triggered Linux/Android kernel
     // RT throttling (a SCHED_FIFO thread that keeps demanding CPU gets
@@ -376,6 +377,8 @@ static aaudio_data_callback_result_t audioCallback(
         out[i * 2 + 0] = f.l;
         out[i * 2 + 1] = f.r;
     }
+    eray::forwardPcAudio(static_cast<int16_t*>(audioData), numFrames,
+                         AAudioStream_getSampleRate(stream));
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 

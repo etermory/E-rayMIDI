@@ -83,6 +83,12 @@ Sound Canvas·MT-32 계열 통합 LLE 엔진), [tarboh/S-MU2000](https://github.
 
 ## 무엇을 할 수 있나요
 
+**USB로 PC에서 소리 듣기:** 앱 상단 출력 버튼에서 `PC만 (USB)` 또는
+`휴대폰 + PC (USB)`를 선택하면, 다섯 엔진이 합성한 오디오를 같은 USB 케이블의
+ADB 연결로 Windows 수신 프로그램에 전송할 수 있습니다. 기존 USB MIDI 입력을
+함께 사용하며 USB 디버깅 허용이 필요합니다. 설정 방법과 제한 사항은
+[PC 수신 프로그램 안내](pc-receiver/README.md)를 참고하세요.
+
 DOS PC(또는 다른 MIDI 소스)에서 나가는 MIDI 신호를 안드로이드 기기로 가져와서,
 다섯 가지 레트로 신시사이저 중 하나로 실제 소리를 냅니다.
 

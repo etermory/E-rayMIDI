@@ -23,6 +23,7 @@
 #include <android/bitmap.h>
 
 #include "AAudioRecover.h"
+#include "PcAudio.h"
 
 #include <thread>
 #include <atomic>
@@ -107,7 +108,7 @@ static bool              s_initialized = false;
 static uint32_t          s_actualRate = 44100;
 
 static aaudio_data_callback_result_t audioCallback(
-        AAudioStream*, void*, void* audioData, int32_t numFrames)
+        AAudioStream* stream, void*, void* audioData, int32_t numFrames)
 {
     auto* out = static_cast<int16_t*>(audioData);
     for (int i = 0; i < numFrames; ++i) {
@@ -116,6 +117,8 @@ static aaudio_data_callback_result_t audioCallback(
         out[i * 2 + 0] = f.l;
         out[i * 2 + 1] = f.r;
     }
+    eray::forwardPcAudio(static_cast<int16_t*>(audioData), numFrames,
+                         AAudioStream_getSampleRate(stream));
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 

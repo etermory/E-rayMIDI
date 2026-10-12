@@ -53,6 +53,45 @@ private const val LCD_FPS_INTERVAL_MS = 50L // ~20fps
     private lateinit var tvSoundFontName: TextView
     private lateinit var btnPickSoundFont: Button
     private lateinit var btnConnectToggle: Button
+    private lateinit var btnAudioOutput: Button
+    private var pcAudioMode = 0
+    private val pcAudioHandler = Handler(Looper.getMainLooper())
+    private val pcAudioPoll = object : Runnable {
+        override fun run() {
+            val state = when (PcAudio.nativeStatus()) {
+                2 -> "PC 연결"
+                else -> "PC 대기"
+            }
+            btnAudioOutput.text = when (pcAudioMode) {
+                1 -> "출력: 휴대폰 + $state"
+                2 -> "출력: $state"
+                else -> "출력: 휴대폰"
+            }
+            pcAudioHandler.postDelayed(this, 500)
+        }
+    }
+
+    private fun showAudioOutputDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("오디오 출력")
+            .setSingleChoiceItems(arrayOf("휴대폰", "휴대폰 + PC (USB)", "PC만 (USB)"), pcAudioMode) { dialog, selected ->
+                if (PcAudio.nativeSetMode(selected)) {
+                    pcAudioMode = selected
+                    pcAudioHandler.removeCallbacks(pcAudioPoll)
+                    pcAudioPoll.run()
+                    dialog.dismiss()
+                    if (selected != 0) {
+                        AlertDialog.Builder(this)
+                            .setTitle("PC 오디오 연결")
+                            .setMessage("휴대폰에서 USB 디버깅을 허용하고 USB 연결 방식을 MIDI로 설정해 주세요. Windows에서 E-rayMIDI-Receiver.exe를 실행하시면 됩니다.\n\nPC만 선택하면 수신 프로그램 연결 전에도 휴대폰은 무음입니다.")
+                            .setPositiveButton("확인", null).show()
+                    }
+                } else {
+                    Toast.makeText(this, "PC 오디오 연결을 준비하지 못했습니다. 다시 시도해 주세요.", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("닫기", null).show()
+    }
     private lateinit var btnResetEngine:  Button
     private lateinit var btnRomHelp:  Button
     private lateinit var tvStatus:    TextView
@@ -306,6 +345,9 @@ private const val LCD_FPS_INTERVAL_MS = 50L // ~20fps
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        btnAudioOutput = findViewById(R.id.btnAudioOutput)
+        btnAudioOutput.setOnClickListener { showAudioOutputDialog() }
+        pcAudioPoll.run()
 
         sc55Engine = SC55Engine(this)
         sc55Engine.onStatus = { msg -> status(msg) }
@@ -910,6 +952,8 @@ private const val LCD_FPS_INTERVAL_MS = 50L // ~20fps
 
     override fun onDestroy() {
         super.onDestroy()
+        pcAudioHandler.removeCallbacks(pcAudioPoll)
+        PcAudio.nativeSetMode(0)
         stopLcdUpdates()
         if (::gearLcdPump.isInitialized) gearLcdPump.stop()
         if (::mu2000LcdPump.isInitialized) mu2000LcdPump.stop()

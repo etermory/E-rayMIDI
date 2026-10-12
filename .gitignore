@@ -28,3 +28,8 @@ android-app/app/src/main/cpp/madaha/**/target/
 *.log
 .DS_Store
 Thumbs.db
+
+# PC audio receiver local environment and downloaded Android tools
+pc-receiver/.venv/
+pc-receiver/platform-tools/
+__pycache__/
